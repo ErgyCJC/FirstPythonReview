@@ -1,0 +1,7 @@
+*.pdf
+*.html
+*.js
+*.css
+
+.DS_Store
+.vscode
