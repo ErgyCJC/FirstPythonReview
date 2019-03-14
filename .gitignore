@@ -3,5 +3,11 @@
 *.js
 *.css
 
+pyvenv.cfg
+
 .DS_Store
 .vscode
+
+**/bin/
+**/include/
+**/lib/
