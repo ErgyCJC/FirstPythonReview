@@ -4,51 +4,62 @@ from tkinter import Canvas
 import logging
 
 
-class TicTacToe:
+class TicTacToe(tk.Tk):
     
     def __init__(self):
-        self.tk_window = tk.Tk()
-        self.init_gui()
+        tk.Tk.__init__(self)
+        self.title('Tic-Tac-Toe Game')
 
+        # Window geometry
+        self.minsize(width=100, height=100)
+        side_length = min(self.winfo_screenwidth() // 4, self.winfo_screenheight() // 4)
+        x = (self.winfo_screenwidth() - side_length) // 2
+        y = (self.winfo_screenheight() - side_length) // 2
+        self.geometry('{width}x{height}+{x}+{y}'.format(width=side_length, height=side_length, x=x, y=y))
+        self.resizable(False, False)
 
-    def init_gui(self):
-        logging.debug('initializing tk window')
-        self.tk_window.title('Tic-Tac-Toe Game')
-
-        self.tk_window.minsize(width=100, height=100)
-        side_length = min(self.tk_window.winfo_screenwidth() // 4, self.tk_window.winfo_screenheight() // 4)
-        x = (self.tk_window.winfo_screenwidth() - side_length) // 2
-        y = (self.tk_window.winfo_screenheight() - side_length) // 2
-        logging.debug('side length: {}'.format(side_length))
-        logging.debug('x window position: {}'.format(x))
-        logging.debug('y window position: {}'.format(y))
-        self.tk_window.geometry('{width}x{height}+{x}+{y}'.format(width=side_length, height=side_length, x=x, y=y))
-        self.tk_window.resizable(False, False)
-
-        self.tk_canvas = Canvas(self.tk_window, width=side_length, height=side_length)
-        self.tk_canvas.pack()
+        # Main canvas
+        self.canvas = Canvas(self, width=side_length, height=side_length, bg='gray')
+        self.canvas.pack()
         
-        # Grid
+        # Grid and cells binding with callback click-on function
         margin = side_length // 20
-        self.tk_canvas.create_rectangle(margin, margin, side_length - margin, side_length - margin)
-        grid_gap = (side_length - 2 * margin) / 3
-        self.tk_canvas.create_rectangle(margin + grid_gap, margin, margin + grid_gap * 2, side_length - margin)
-        self.tk_canvas.create_rectangle(margin, margin + grid_gap, side_length - margin, margin + grid_gap * 2)
+        grid_gap = (side_length - 2 * margin) // 3
+        self.cells_coords = [[(margin + j * grid_gap, margin + i * grid_gap, margin + (j + 1) * grid_gap, margin + (i + 1) * grid_gap)
+                            for j in range(3)] for i in range(3)]
 
+        self.cells_coords = self.cells_coords[0] + self.cells_coords[1] + self.cells_coords[2]
+        
+        for cell_i in range(9):
+            self.canvas.create_rectangle(self.cells_coords[cell_i][0],
+                                            self.cells_coords[cell_i][1],
+                                            self.cells_coords[cell_i][2],
+                                            self.cells_coords[cell_i][3],
+                                            tags=str(cell_i),
+                                            fill='grey')
+            self.canvas.tag_bind(str(cell_i + 1), '<ButtonPress-1>', self.fill_cell)
 
-    def choose_letter(self):
-        if messagebox.askyesno('X?', 'Would you like to play with X?'):
-            return 'X', 'O'
-        return 'O', 'X'
+        
 
+        self.mainloop()
+    
 
-    def play(self):
-        # letter, opponent_letter = self.choose_letter()
-        self.tk_window.mainloop()
+    def fill_cell(self, event):
+        logging.debug('canvas click x:{} y:{}'.format(event.x, event.y))
+
+        x = event.x
+        y = event.y
+
+        for cell_number in range(9):
+            if (self.cells_coords[cell_number][0] < x and x < self.cells_coords[cell_number][2] and
+                self.cells_coords[cell_number][1] < y and y < self.cells_coords[cell_number][3]):
+                break
+
+        logging.debug('cell {} selected'.format(cell_number))
+        print(cell_number)
 
 
 if __name__ == '__main__':
     logging.basicConfig(filename="tic-tac-toe.log", level=logging.DEBUG)
 
     game = TicTacToe()
-    game.play()
