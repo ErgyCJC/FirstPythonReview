@@ -1,2 +1,2 @@
-# First Python Review. March 2019
-Console graphics tanks game
+# First ConsolePython Review. March 2019
+Tic-Tac-Toe game using tkinter
