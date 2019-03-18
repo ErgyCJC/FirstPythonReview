@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import Canvas
 import logging
+import math
 
 
 class TicTacToe(tk.Tk):
@@ -41,8 +42,8 @@ class TicTacToe(tk.Tk):
 
         # Game logic initializing
         self.letters = ['-'] * 9
-        self.player_letter = 'X'
-        self.opponent_letter = 'O'
+        self.players_letters = ['X', 'O']
+        self.current_letter_index = 0
 
         self.mainloop()
     
@@ -60,10 +61,11 @@ class TicTacToe(tk.Tk):
         logging.debug('cell {} selected'.format(cell_number))
 
         if self.letters[cell_number] == '-':
-            self.letters[cell_number] = self.player_letter
-            self.draw_letter(cell_number, self.player_letter)
+            current_letter = self.players_letters[self.current_letter_index]
+            self.letters[cell_number] = current_letter
+            self.draw_letter(cell_number, current_letter)
 
-            self.opponent_turn()
+            self.change_letter()
 
     
     def draw_letter(self, cell_number, letter):
@@ -73,8 +75,8 @@ class TicTacToe(tk.Tk):
         self.canvas.create_text(x, y, font='Times {}'.format(font_size), text=letter)
 
 
-    def opponent_turn(self):
-        pass
+    def change_letter(self):
+        self.current_letter_index = abs(self.current_letter_index - 1)
 
 
 
