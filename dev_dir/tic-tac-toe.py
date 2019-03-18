@@ -19,6 +19,12 @@ class TicTacToe(tk.Tk):
         self.geometry('{width}x{height}+{x}+{y}'.format(width=side_length, height=side_length, x=x, y=y))
         self.resizable(False, False)
 
+        self.show_game_field(side_length)
+
+        self.mainloop()
+    
+
+    def show_game_field(self, side_length):
         # Main canvas
         self.canvas = Canvas(self, width=side_length, height=side_length, bg='gray')
         self.canvas.pack()
@@ -45,8 +51,6 @@ class TicTacToe(tk.Tk):
         self.players_letters = ['X', 'O']
         self.current_letter_index = 0
 
-        self.mainloop()
-    
 
     def player_turn(self, event):
         logging.debug('canvas click x:{} y:{}'.format(event.x, event.y))
@@ -65,7 +69,15 @@ class TicTacToe(tk.Tk):
             self.letters[cell_number] = current_letter
             self.draw_letter(cell_number, current_letter)
 
-            self.change_letter()
+            win_state = self.check_win_state()
+            if win_state != None:
+                self.show_win_window(win_state)
+            
+            self.change_current_letter()
+
+        
+    def show_win_window(self, letter):
+        pass
 
     
     def draw_letter(self, cell_number, letter):
@@ -75,9 +87,35 @@ class TicTacToe(tk.Tk):
         self.canvas.create_text(x, y, font='Times {}'.format(font_size), text=letter)
 
 
-    def change_letter(self):
+    def change_current_letter(self):
         self.current_letter_index = abs(self.current_letter_index - 1)
 
+    
+    def check_win_line(self, cells_indexies):
+        for cell_number in cells_indexies:
+            if self.letters[cell_number] == '-' or self.letters[cells_indexies[0]] != self.letters[cell_number]:
+                return None
+        
+        return self.letters[cells_indexies[0]]
+
+    
+    def check_win_state(self):
+        lines = ['0 1 2'
+                , '3 4 5'
+                , '6 7 8'
+                , '0 3 6'
+                , '1 4 7'
+                , '2 5 8'
+                , '0 4 8'
+                , '2 4 6']
+        lines = [list(map(int, x.split())) for x in lines]
+        
+        for line in lines:
+            win_state = self.check_win_line(line)
+            if win_state != None:
+                return win_state
+
+        return None
 
 
 if __name__ == '__main__':
