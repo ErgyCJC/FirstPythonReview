@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import Canvas
+from tkinter import Button
+from tkinter import Label
 import logging
 import math
 
@@ -13,25 +15,28 @@ class TicTacToe(tk.Tk):
 
         # Window geometry
         self.minsize(width=100, height=100)
-        side_length = min(self.winfo_screenwidth() // 4, self.winfo_screenheight() // 4)
-        x = (self.winfo_screenwidth() - side_length) // 2
-        y = (self.winfo_screenheight() - side_length) // 2
-        self.geometry('{width}x{height}+{x}+{y}'.format(width=side_length, height=side_length, x=x, y=y))
+        self.side_length = min(self.winfo_screenwidth() // 4, self.winfo_screenheight() // 4)
+        x = (self.winfo_screenwidth() - self.side_length) // 2
+        y = (self.winfo_screenheight() - self.side_length) // 2
+        self.geometry('{width}x{height}+{x}+{y}'.format(width=self.side_length, height=self.side_length, x=x, y=y))
         self.resizable(False, False)
 
-        self.show_game_field(side_length)
+        self.show_game_field()
 
         self.mainloop()
     
 
-    def show_game_field(self, side_length):
+    def show_game_field(self):
         # Main canvas
-        self.canvas = Canvas(self, width=side_length, height=side_length, bg='gray')
+        self.canvas = Canvas(self, width=self.side_length, height=self.side_length, bg='gray')
         self.canvas.pack()
         
         # Grid and cells binding with callback click-on function
-        margin = side_length // 20
-        grid_gap = (side_length - 2 * margin) // 3
+        margin = self.side_length // 20
+        grid_gap = (self.side_length - 2 * margin) // 3
+
+        logging.debug('grid_gap: {}'.format(grid_gap))
+
         self.cells_coords = [[(margin + j * grid_gap, margin + i * grid_gap, margin + (j + 1) * grid_gap, margin + (i + 1) * grid_gap)
                             for j in range(3)] for i in range(3)]
 
@@ -47,6 +52,7 @@ class TicTacToe(tk.Tk):
             self.canvas.tag_bind(str(cell_i + 1), '<ButtonPress-1>', self.player_turn)
 
         # Game logic initializing
+        self.filled_cells_count = 0
         self.letters = ['-'] * 9
         self.players_letters = ['X', 'O']
         self.current_letter_index = 0
@@ -65,19 +71,40 @@ class TicTacToe(tk.Tk):
         logging.debug('cell {} selected'.format(cell_number))
 
         if self.letters[cell_number] == '-':
+            self.filled_cells_count += 1
             current_letter = self.players_letters[self.current_letter_index]
             self.letters[cell_number] = current_letter
             self.draw_letter(cell_number, current_letter)
 
-            win_state = self.check_win_state()
-            if win_state != None:
-                self.show_win_window(win_state)
+            winner = self.check_win_state()
+            if winner != None:
+                self.show_win_window(winner)
             
             self.change_current_letter()
 
         
-    def show_win_window(self, letter):
-        pass
+    def show_win_window(self, winner):
+        self.canvas.destroy()
+
+        self.replay_label = Label(self, text='{} won!\n\nDo you want to replay?'.format(winner))
+        self.replay_label.pack()
+        
+        self.replay_button = Button(self, text='Replay', command=self.click_replay)
+        self.replay_button.pack()
+
+        self.exit_button = Button(self, text='Exit', command=self.click_exit)
+        self.exit_button.pack()
+
+
+    def click_exit(self):
+        exit()
+
+
+    def click_replay(self):
+        self.replay_label.pack_forget()
+        self.replay_button.pack_forget()
+        self.exit_button.pack_forget()
+        self.show_game_field()
 
     
     def draw_letter(self, cell_number, letter):
@@ -100,6 +127,9 @@ class TicTacToe(tk.Tk):
 
     
     def check_win_state(self):
+        if self.filled_cells_count == 9:
+            return 'Noone'
+
         lines = ['0 1 2'
                 , '3 4 5'
                 , '6 7 8'
