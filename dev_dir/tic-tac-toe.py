@@ -134,14 +134,14 @@ class TicTacToe(tk.Tk):
         self.current_letter_index = abs(self.current_letter_index - 1)
         logging.debug('change letter to index {}'.format(self.current_letter_index))
 
-    def check_win_line(self, cells_indexies):
-        for cell_number in cells_indexies:
-            if self.letters[cell_number] == '-' or self.letters[cells_indexies[0]] != self.letters[cell_number]:
-                logging.debug('line {} is not won'.format(cells_indexies))
+    def check_win_line(self, cells_indexes):
+        for cell_number in cells_indexes:
+            if self.letters[cell_number] == '-' or self.letters[cells_indexes[0]] != self.letters[cell_number]:
+                logging.debug('line {} is not won'.format(cells_indexes))
                 return None
 
-        logging.debug('line {} won'.format(cells_indexies))
-        return self.letters[cells_indexies[0]]
+        logging.debug('line {} won'.format(cells_indexes))
+        return self.letters[cells_indexes[0]]
 
     def check_win_state(self):
         """ Checking potential win-lines """
