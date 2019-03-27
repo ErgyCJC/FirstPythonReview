@@ -145,8 +145,6 @@ class TicTacToe(tk.Tk):
 
     def check_win_state(self):
         """ Checking potential win-lines """
-        if self.filled_cells_count == 9:
-            return 'Noone'
 
         lines = ['0 1 2', '3 4 5', '6 7 8', '0 3 6', '1 4 7', '2 5 8', '0 4 8', '2 4 6']
         lines = [list(map(int, x.split())) for x in lines]
@@ -156,6 +154,9 @@ class TicTacToe(tk.Tk):
             if win_state is not None:
                 logging.debug('winner {}'.format(line))
                 return win_state
+
+        if self.filled_cells_count == 9:
+            return 'Noone'
 
         return None
 
