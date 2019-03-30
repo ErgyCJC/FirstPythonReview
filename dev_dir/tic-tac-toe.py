@@ -7,7 +7,7 @@ import logging
 
 class TicTacToe(tk.Tk):
 
-    def __init__(self):
+    def __init__(self, board_size):
         """ Sets window properties """
         logging.debug('init game obj')
         tk.Tk.__init__(self)
@@ -15,10 +15,11 @@ class TicTacToe(tk.Tk):
 
         # Window geometry
         self.minsize(width=100, height=100)
+        self.board_size = board_size
 
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        self.side_length = min(screen_width // 4, screen_height // 4)
+        self.side_length = min(screen_width // 2, screen_height // 2)
 
         x = (screen_width - self.side_length) // 2
         y = (screen_height - self.side_length) // 2
@@ -43,27 +44,26 @@ class TicTacToe(tk.Tk):
 
         # Grid and cells binding with click-on function
         margin = self.side_length // 20
-        grid_gap = (self.side_length - 2 * margin) // 3
+        grid_gap = (self.side_length - 2 * margin) // self.board_size
 
         logging.debug('grid_gap: {}'.format(grid_gap))
 
         self.cells_coords = [[(margin + j * grid_gap, margin + i * grid_gap, margin + (j + 1) * grid_gap, margin + (i + 1) * grid_gap)
-        for j in range(3)] for i in range(3)]
+        for j in range(self.board_size)] for i in range(self.board_size)]
 
-        self.cells_coords = self.cells_coords[0] + self.cells_coords[1] + self.cells_coords[2]
-
-        for cell_i in range(9):
-            self.canvas.create_rectangle(self.cells_coords[cell_i][0],
-                                            self.cells_coords[cell_i][1],
-                                            self.cells_coords[cell_i][2],
-                                            self.cells_coords[cell_i][3],
-                                            tags=str(cell_i),
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                self.canvas.create_rectangle(self.cells_coords[i][j][0],
+                                            self.cells_coords[i][j][1],
+                                            self.cells_coords[i][j][2],
+                                            self.cells_coords[i][j][3],
+                                            tags=str(i * self.board_size + j + 1),
                                             fill='grey')
-            self.canvas.tag_bind(str(cell_i + 1), '<ButtonPress-1>', self.player_turn)
+                self.canvas.tag_bind(str(i * self.board_size + j + 1), '<ButtonPress-1>', self.player_turn)
 
         # Game logic initializing
         self.filled_cells_count = 0
-        self.letters = ['-'] * 9
+        self.letters = [['-' for j in range(self.board_size)] for i in range(self.board_size)]
         self.players_letters = ['X', 'O']
         self.current_letter_index = 0
 
@@ -74,24 +74,27 @@ class TicTacToe(tk.Tk):
         x = event.x
         y = event.y
 
+        result_i, result_j = None, None
+
         # Looking for cell with right coordinates
-        for cell_number in range(9):
-            if (self.cells_coords[cell_number][0] < x and
-                x < self.cells_coords[cell_number][2] and
-                self.cells_coords[cell_number][1] < y and
-                y < self.cells_coords[cell_number][3]):
-                break
-        logging.debug('cell {} selected'.format(cell_number))
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                if (self.cells_coords[i][j][0] < x and
+                    x < self.cells_coords[i][j][2] and
+                    self.cells_coords[i][j][1] < y and
+                    y < self.cells_coords[i][j][3]):
+                    result_i, result_j = i, j
+        logging.debug('cell {}x{} selected'.format(result_i, result_j))
 
         # Is it possible to put a letter into the cell
-        if self.letters[cell_number] == '-':
+        if result_i is not None and result_j is not None and self.letters[result_i][result_j] == '-':
             self.filled_cells_count += 1
             current_letter = self.players_letters[self.current_letter_index]
-            self.letters[cell_number] = current_letter
-            self.draw_letter(cell_number, current_letter)
+            self.letters[result_i][result_j] = current_letter
+            self.draw_letter(result_i, result_j, current_letter)
 
             # Looking for winner after turn
-            winner = self.check_win_state()
+            winner = self.check_win_state(result_i, result_j)
             if winner is not None:
                 self.show_win_window(winner)
 
@@ -124,38 +127,58 @@ class TicTacToe(tk.Tk):
         self.exit_button.pack_forget()
         self.show_game_field()
 
-    def draw_letter(self, cell_number, letter):
-        x = (self.cells_coords[cell_number][2] + self.cells_coords[cell_number][0]) // 2
-        y = (self.cells_coords[cell_number][3] + self.cells_coords[cell_number][1]) // 2
-        font_size = (self.cells_coords[cell_number][3] - self.cells_coords[cell_number][1]) // 3
+    def draw_letter(self, cell_i, cell_j, letter):
+        x = (self.cells_coords[cell_i][cell_j][2] + self.cells_coords[cell_i][cell_j][0]) // 2
+        y = (self.cells_coords[cell_i][cell_j][3] + self.cells_coords[cell_i][cell_j][1]) // 2
+        font_size = (self.cells_coords[cell_i][cell_j][3] - self.cells_coords[cell_i][cell_j][1]) // 3
         self.canvas.create_text(x, y, font='Times {}'.format(font_size), text=letter)
 
     def change_current_letter(self):
         self.current_letter_index = abs(self.current_letter_index - 1)
         logging.debug('change letter to index {}'.format(self.current_letter_index))
 
-    def check_win_line(self, cells_indexes):
-        for cell_number in cells_indexes:
-            if self.letters[cell_number] == '-' or self.letters[cells_indexes[0]] != self.letters[cell_number]:
-                logging.debug('line {} is not won'.format(cells_indexes))
+    def check_win_line(self, cells):
+        base_y, base_x = cells[0][0], cells[0][1]
+        
+        for cell in cells:
+            y, x = cell[0], cell[1]
+            if x < 0 or y < 0 or x >= self.board_size or y >= self.board_size:
+                logging.debug('line {} is not win-line: wrong coords'.format(cells))
                 return None
 
-        logging.debug('line {} won'.format(cells_indexes))
-        return self.letters[cells_indexes[0]]
+            if self.letters[y][x] == '-' or self.letters[base_y][base_x] != self.letters[y][x]:
+                logging.debug('line {} is not win-line: diff letters'.format(cells))
+                return None
 
-    def check_win_state(self):
+        logging.debug('line {} won'.format(cells))
+        return self.letters[base_y][base_x]
+
+    def check_win_state(self, cell_i, cell_j):
         """ Checking potential win-lines """
 
-        lines = ['0 1 2', '3 4 5', '6 7 8', '0 3 6', '1 4 7', '2 5 8', '0 4 8', '2 4 6']
-        lines = [list(map(int, x.split())) for x in lines]
+        line_len = 3 # Length of possible win-line
+        
+        # Vertical and horizontal lines and diagonals checking
+        for delta in range(-2, 0 + 1):
+            lines = []
+            directions = 4
+            for x in range(directions):
+                lines.append([])
 
-        for line in lines:
-            win_state = self.check_win_line(line)
-            if win_state is not None:
-                logging.debug('winner {}'.format(line))
-                return win_state
+            for index in range(line_len):
+                lines[0].append((cell_i + delta + index, cell_j))
+                lines[1].append((cell_i, cell_j + delta + index))
+                lines[2].append((cell_i + delta + index, cell_j + delta + index))
 
-        if self.filled_cells_count == 9:
+                lines[3].append((cell_i + delta + index, cell_j - delta - index))
+            
+            for index in range(directions):
+                win_state = self.check_win_line(lines[index])
+                if win_state is not None:
+                    logging.debug('winner {}'.format(lines[index]))
+                    return win_state
+
+        if self.filled_cells_count == (self.board_size ** 2):
             return 'Noone'
 
         return None
@@ -164,4 +187,11 @@ class TicTacToe(tk.Tk):
 if __name__ == '__main__':
     logging.basicConfig(filename="tic-tac-toe.log", level=logging.DEBUG)
 
-    game = TicTacToe()
+    """
+    Win line has always length 3.
+    Win-combinations can be placed in 4 directions:
+    vertical, horizontal and two diagonals.
+    """
+
+    board_size = 4
+    game = TicTacToe(board_size)
