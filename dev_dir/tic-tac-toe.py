@@ -7,7 +7,7 @@ import logging
 
 class TicTacToe(tk.Tk):
 
-    def __init__(self, board_size):
+    def __init__(self, board_size = 3):
         """ Sets window properties """
         logging.debug('init game obj')
         tk.Tk.__init__(self)
@@ -159,7 +159,8 @@ class TicTacToe(tk.Tk):
         line_len = 3 # Length of possible win-line
         
         # Vertical and horizontal lines and diagonals checking
-        for delta in range(-2, 0 + 1):
+        init_delta = 1 - line_len
+        for delta in range(init_delta, init_delta + line_len):
             lines = []
             directions = 4
             for x in range(directions):
@@ -169,7 +170,6 @@ class TicTacToe(tk.Tk):
                 lines[0].append((cell_i + delta + index, cell_j))
                 lines[1].append((cell_i, cell_j + delta + index))
                 lines[2].append((cell_i + delta + index, cell_j + delta + index))
-
                 lines[3].append((cell_i + delta + index, cell_j - delta - index))
             
             for index in range(directions):
@@ -193,5 +193,4 @@ if __name__ == '__main__':
     vertical, horizontal and two diagonals.
     """
 
-    board_size = 4
-    game = TicTacToe(board_size)
+    game = TicTacToe()
