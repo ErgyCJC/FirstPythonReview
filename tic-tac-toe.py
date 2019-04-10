@@ -87,7 +87,9 @@ class TicTacToe(tk.Tk):
         self.players_letters = ['X', 'O']
         self.current_letter_index = 0
         self.draw_result = 'Draw!'
-        self.directions = ((1, 0), (0, 1), (1, 1), (-1, 1)) # Possible win-sequences directions on board in (x, y) axises
+
+        # Possible win-sequences directions on board in (x, y) axises
+        self.directions = ((1, 0), (0, 1), (1, 1), (-1, 1))
 
     def player_turn(self, event):
         """ Processes players clicks """
