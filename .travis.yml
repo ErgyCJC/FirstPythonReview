@@ -8,13 +8,9 @@ install:
 
 script: pytest
 
-# notifications:
-#   email:
-#     recipients:
-#       - tp.address.ergycjc@gmail.com
-#     on_success: always
-#     on_failure: always
-
 notifications:
   email:
-    tp.address.ergycjc@gmail.com
+    recipients:
+      - tp.address.ergycjc@gmail.com
+    on_success: always
+    on_failure: always
