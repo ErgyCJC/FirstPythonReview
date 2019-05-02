@@ -1,1 +1,2 @@
 threadsafe-tkinter==1.0.1
+pytest==4.3.1
